@@ -1,5 +1,6 @@
 import os
 import base64
+import hashlib
 from typing import Union
 from os.path import dirname, abspath, join
 from fastapi import FastAPI
@@ -18,6 +19,10 @@ class Body(BaseModel):
     length: Union[int, None] = 20
 
 
+class Text(BaseModel):
+    text: str
+
+
 @app.get('/')
 def root():
     html_path = join(static_path, "index.html")
@@ -27,7 +32,8 @@ def root():
 @app.post('/generate')
 def generate(body: Body):
     """
-    Generate a pseudo-random token ID of twenty characters by default. Example POST request body:
+    Generate a pseudo-random token ID of twenty characters by default.
+    Example POST request body:
 
     {
         "length": 20
@@ -35,3 +41,20 @@ def generate(body: Body):
     """
     string = base64.b64encode(os.urandom(64))[:body.length].decode('utf-8')
     return {'token': string}
+
+
+class docsBody(BaseModel):
+    text: str
+
+
+@app.post('/docs')
+def docs(body: docsBody):
+    """
+    Calculate the docs of the provided text. Example POST request body:
+
+    {
+        "text": "Hello, World!"
+    }
+    """
+    docs = hashlib.sha256(body.text.encode('utf-8')).hexdigest()
+    return {'docs': docs}
